@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Vibe — Eseménykereső</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --sage:#8BAF8B; --sage-light:#C4D8C4; --sage-pale:#EEF4EE;
+  --peach:#E8A98C; --peach-light:#F5D4C4; --peach-pale:#FBF0EB;
+  --sky:#A8C5D8; --sky-pale:#EBF3F8;
+  --lavender:#C4AEDD; --lavender-pale:#F3EEF9;
+  --butter:#E8D48C; --butter-pale:#FBF7EB;
+  --cream:#FBF8F4; --brown-soft:#5C4A3A;
+  --text:#2D2820; --text-muted:#7A6E64; --text-light:#B0A89E;
+  --white:#FFFFFF; --border:rgba(92,74,58,0.1); --border-hover:rgba(92,74,58,0.2);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:1.1rem 2.5rem;background:rgba(251,248,244,0.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);}
+.logo{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:600;color:var(--brown-soft);letter-spacing:-0.3px;cursor:pointer;}
+.logo span{color:var(--sage);}
+.nav-links{display:flex;gap:1.5rem;align-items:center;}
+.nav-links a{text-decoration:none;font-size:0.875rem;font-weight:400;color:var(--text-muted);transition:color 0.2s;cursor:pointer;}
+.nav-links a:hover{color:var(--text);}
+.nav-links a.active{color:var(--sage);font-weight:500;}
+.nav-cta{background:var(--brown-soft)!important;color:var(--white)!important;padding:0.45rem 1.1rem;border-radius:50px;font-weight:500!important;}
+.nav-user{display:flex;align-items:center;gap:8px;cursor:pointer;}
+.nav-avatar{width:32px;height:32px;border-radius:50%;background:var(--sage);color:white;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:600;}
+
+.page{display:none;} .page.active{display:block;}
+
+.hero{padding:8rem 2.5rem 4rem;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;max-width:1100px;margin:0 auto;min-height:90vh;}
+.hero-tag{display:inline-flex;align-items:center;gap:6px;background:var(--sage-pale);border:1px solid var(--sage-light);color:var(--sage);border-radius:50px;padding:0.3rem 0.9rem;font-size:0.8rem;font-weight:500;margin-bottom:1.5rem;animation:fadeUp 0.6s ease both;}
+.hero-tag::before{content:'';width:7px;height:7px;background:var(--sage);border-radius:50%;}
+.hero-h1{font-family:'Playfair Display',serif;font-size:clamp(2.6rem,5vw,3.8rem);font-weight:600;line-height:1.15;color:var(--text);margin-bottom:1.2rem;animation:fadeUp 0.6s 0.1s ease both;}
+.hero-h1 em{font-style:italic;color:var(--sage);}
+.hero-p{font-size:1.05rem;line-height:1.75;color:var(--text-muted);margin-bottom:2.5rem;max-width:440px;animation:fadeUp 0.6s 0.2s ease both;}
+.hero-search{display:flex;border-radius:50px;overflow:hidden;border:1px solid var(--border-hover);background:var(--white);box-shadow:0 4px 24px rgba(92,74,58,0.08);animation:fadeUp 0.6s 0.3s ease both;}
+.hero-search input{flex:1;border:none;outline:none;padding:0.95rem 1.4rem;font-family:'DM Sans',sans-serif;font-size:0.95rem;background:transparent;color:var(--text);}
+.hero-search input::placeholder{color:var(--text-light);}
+.hero-search button{background:var(--sage);color:white;border:none;padding:0.9rem 1.6rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;transition:background 0.2s;}
+.hero-search button:hover{background:#7a9e7a;}
+.hero-stats{display:flex;gap:2rem;margin-top:2rem;animation:fadeUp 0.6s 0.4s ease both;}
+.stat{display:flex;flex-direction:column;gap:1px;}
+.stat-num{font-size:1.5rem;font-weight:600;color:var(--text);}
+.stat-label{font-size:0.8rem;color:var(--text-muted);}
+
+.hero-visual{position:relative;animation:fadeUp 0.7s 0.2s ease both;}
+.hero-card-stack{position:relative;height:440px;}
+.hcard{position:absolute;border-radius:24px;padding:1.5rem;border:1px solid rgba(255,255,255,0.8);}
+.hcard-main{bottom:0;left:0;right:0;height:280px;background:var(--white);box-shadow:0 8px 40px rgba(92,74,58,0.12);display:flex;flex-direction:column;justify-content:space-between;}
+.hcard-float1{top:0;right:0;width:200px;background:linear-gradient(135deg,#C4D8C4,#8BAF8B);box-shadow:0 6px 24px rgba(139,175,139,0.35);color:white;}
+.hcard-float2{top:80px;left:-20px;width:160px;background:linear-gradient(135deg,#F5D4C4,#E8A98C);box-shadow:0 6px 24px rgba(232,169,140,0.35);color:white;padding:1rem;}
+.hcard-emoji{font-size:2rem;margin-bottom:0.5rem;}
+.hcard-tag{display:inline-block;background:rgba(255,255,255,0.25);font-size:0.7rem;padding:2px 8px;border-radius:50px;margin-bottom:0.5rem;font-weight:500;}
+.hcard-title-sm{font-size:1rem;font-weight:600;line-height:1.3;}
+.hcard-date-sm{font-size:0.75rem;opacity:0.8;margin-top:4px;}
+.hcard-img-area{width:100%;height:140px;border-radius:14px;background:linear-gradient(135deg,var(--sage-pale),var(--sky-pale));display:flex;align-items:center;justify-content:center;font-size:3.5rem;margin-bottom:1rem;}
+.hcard-info h3{font-size:1rem;font-weight:600;color:var(--text);}
+.hcard-info p{font-size:0.8rem;color:var(--text-muted);}
+.hcard-footer{display:flex;align-items:center;justify-content:space-between;}
+.hcard-price{font-weight:600;color:var(--text);font-size:0.95rem;}
+.hcard-btn-sm{background:var(--sage);color:white;border:none;cursor:pointer;padding:0.4rem 0.9rem;border-radius:50px;font-size:0.8rem;font-family:'DM Sans',sans-serif;font-weight:500;}
+.deco-dot{position:absolute;border-radius:50%;animation:float 4s ease-in-out infinite;}
+.dot1{width:80px;height:80px;background:var(--butter-pale);border:2px solid var(--butter);top:-30px;left:60px;animation-delay:0s;}
+.dot2{width:40px;height:40px;background:var(--lavender-pale);border:2px solid var(--lavender);bottom:30px;right:-20px;animation-delay:1.5s;}
+.dot3{width:24px;height:24px;background:var(--peach-pale);border:2px solid var(--peach-light);top:50%;right:20px;animation-delay:0.8s;}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}
+
+.featured-section{padding:2rem 2.5rem;max-width:1100px;margin:0 auto;}
+.section-label{font-size:0.78rem;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-light);margin-bottom:1.2rem;}
+.featured-card{background:var(--white);border-radius:24px;border:1px solid var(--border);display:grid;grid-template-columns:1fr 2fr;overflow:hidden;box-shadow:0 4px 24px rgba(92,74,58,0.07);}
+.featured-img{background:linear-gradient(135deg,#C4D8C4 0%,#8BAF8B 100%);display:flex;align-items:center;justify-content:center;font-size:5rem;min-height:220px;}
+.featured-body{padding:2rem;display:flex;flex-direction:column;justify-content:space-between;}
+.feat-tag{display:inline-block;background:var(--sage-pale);color:var(--sage);font-size:0.75rem;font-weight:500;padding:4px 12px;border-radius:50px;margin-bottom:0.75rem;border:1px solid var(--sage-light);}
+.feat-title{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:600;color:var(--text);margin-bottom:0.5rem;line-height:1.2;}
+.feat-meta{font-size:0.88rem;color:var(--text-muted);line-height:1.7;margin-bottom:1.5rem;}
+.feat-actions{display:flex;gap:10px;align-items:center;}
+.feat-btn-primary{background:var(--sage);color:white;border:none;padding:0.7rem 1.6rem;border-radius:50px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:500;transition:background 0.2s;}
+.feat-btn-primary:hover{background:#7a9e7a;}
+.feat-btn-ghost{background:transparent;color:var(--text-muted);border:1px solid var(--border-hover);padding:0.65rem 1.4rem;border-radius:50px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.9rem;transition:all 0.2s;}
+.feat-btn-ghost:hover{background:var(--sage-pale);color:var(--text);}
+
+.cats-section{padding:2rem 2.5rem 1rem;max-width:1100px;margin:0 auto;}
+.cats-grid{display:flex;flex-wrap:wrap;gap:10px;}
+.cat-pill{display:flex;align-items:center;gap:8px;padding:0.6rem 1.2rem;border-radius:50px;border:1px solid var(--border);background:var(--white);font-size:0.88rem;font-weight:400;color:var(--text-muted);cursor:pointer;transition:all 0.2s;user-select:none;}
+.cat-pill:hover,.cat-pill.active{border-color:var(--border-hover);background:var(--sage-pale);color:var(--brown-soft);font-weight:500;}
+.cat-pill.active{background:var(--sage);color:white;border-color:var(--sage);}
+
+.view-btn{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:6px 14px;font-size:0.82rem;cursor:pointer;color:var(--text-muted);font-family:'DM Sans',sans-serif;transition:all 0.18s;}
+.view-btn.active{background:var(--sage);color:white;border-color:var(--sage);}
+
+.events-section{padding:1rem 2.5rem 5rem;max-width:1100px;margin:0 auto;}
+.events-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.8rem;flex-wrap:wrap;gap:1rem;}
+.events-title{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:600;color:var(--text);}
+.events-count{font-size:0.85rem;color:var(--text-light);}
+.events-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;}
+.event-card{background:var(--white);border-radius:20px;border:1px solid var(--border);overflow:hidden;cursor:pointer;transition:transform 0.22s ease,box-shadow 0.22s ease,border-color 0.22s;display:flex;flex-direction:column;}
+.event-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(92,74,58,0.1);border-color:var(--border-hover);}
+.ec-img{height:160px;display:flex;align-items:center;justify-content:center;font-size:4rem;position:relative;overflow:hidden;}
+.ec-badge{position:absolute;top:12px;left:12px;font-size:0.72rem;font-weight:500;padding:4px 11px;border-radius:50px;}
+.ec-body{padding:1.2rem;flex:1;display:flex;flex-direction:column;}
+.ec-title{font-weight:600;font-size:1rem;color:var(--text);margin-bottom:6px;line-height:1.4;}
+.ec-meta{font-size:0.82rem;color:var(--text-muted);line-height:1.6;margin-bottom:auto;}
+.ec-meta span{display:block;}
+.ec-footer{display:flex;align-items:center;justify-content:space-between;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);}
+.ec-price{font-size:0.95rem;font-weight:600;color:var(--text);}
+.ec-price small{font-weight:400;color:var(--text-light);font-size:0.75rem;margin-left:2px;}
+.ec-btn{background:var(--cream);color:var(--text);border:1px solid var(--border-hover);border-radius:50px;padding:0.4rem 1rem;font-size:0.82rem;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.18s;}
+.ec-btn:hover{background:var(--sage);color:white;border-color:var(--sage);}
+.theme-sage{background:linear-gradient(135deg,#EEF4EE 0%,#C4D8C4 100%);}
+.theme-peach{background:linear-gradient(135deg,#FBF0EB 0%,#F5D4C4 100%);}
+.theme-sky{background:linear-gradient(135deg,#EBF3F8 0%,#C4DBE8 100%);}
+.theme-lavender{background:linear-gradient(135deg,#F3EEF9 0%,#D4BEE8 100%);}
+.theme-butter{background:linear-gradient(135deg,#FBF7EB 0%,#F0DFA8 100%);}
+.badge-zene{background:#EEF4EE;color:#4a7a4a;}
+.badge-sport{background:#EBF3F8;color:#2a6080;}
+.badge-gasztro{background:#FBF0EB;color:#9c5030;}
+.badge-kultura{background:#F3EEF9;color:#6a3a9a;}
+.badge-tech{background:#FBF7EB;color:#8c6010;}
+.badge-termeszet{background:#EEF4EE;color:#3a6a3a;}
+.no-results{padding:3rem;text-align:center;color:var(--text-muted);font-size:1rem;grid-column:1/-1;}
+
+/* CALENDAR */
+.calendar-page{padding:7rem 2.5rem 4rem;max-width:1100px;margin:0 auto;}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;}
+.cal-title{font-family:'Playfair Display',serif;font-size:2rem;font-weight:600;color:var(--text);}
+.cal-nav{display:flex;align-items:center;gap:1rem;}
+.cal-nav-btn{background:var(--white);border:1px solid var(--border-hover);border-radius:50%;width:38px;height:38px;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all 0.18s;font-family:inherit;}
+.cal-nav-btn:hover{background:var(--sage);color:white;border-color:var(--sage);}
+.cal-month-label{font-size:1.1rem;font-weight:500;color:var(--text);min-width:170px;text-align:center;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border-radius:16px;overflow:hidden;border:1px solid var(--border);}
+.cal-day-name{background:var(--sage-pale);padding:0.6rem;text-align:center;font-size:0.75rem;font-weight:500;color:var(--text-muted);}
+.cal-day{background:var(--white);padding:0.5rem;min-height:96px;cursor:pointer;transition:background 0.15s;position:relative;vertical-align:top;}
+.cal-day:hover{background:var(--sage-pale);}
+.cal-day.other-month .cal-day-num{color:var(--text-light);}
+.cal-day-num{font-size:0.85rem;font-weight:500;color:var(--text);margin-bottom:4px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:50%;}
+.cal-day.today .cal-day-num{background:var(--sage);color:white;}
+.cal-event-chip{font-size:0.67rem;border-radius:5px;padding:2px 6px;margin-bottom:2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;border-left:2px solid var(--sage);background:var(--sage-pale);color:var(--brown-soft);transition:all 0.15s;display:block;}
+.cal-event-chip:hover{background:var(--sage);color:white;border-left-color:white;}
+.chip-peach{background:var(--peach-pale);border-left-color:var(--peach);color:#7a3a20;}
+.chip-peach:hover{background:var(--peach);color:white;}
+.chip-sky{background:var(--sky-pale);border-left-color:var(--sky);color:#1a5070;}
+.chip-sky:hover{background:var(--sky);color:white;}
+.chip-lavender{background:var(--lavender-pale);border-left-color:var(--lavender);color:#5a2a8a;}
+.chip-lavender:hover{background:var(--lavender);color:white;}
+.chip-butter{background:var(--butter-pale);border-left-color:var(--butter);color:#6a4a10;}
+.chip-butter:hover{background:var(--butter);color:white;}
+.cal-more{font-size:0.67rem;color:var(--text-light);padding:1px 4px;}
+.cal-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:1.25rem;}
+.cal-leg{display:flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--text-muted);}
+.cal-leg-dot{width:10px;height:10px;border-radius:3px;}
+
+/* AUTH MODAL */
+.auth-overlay{display:none;position:fixed;inset:0;z-index:300;background:rgba(45,40,32,0.55);backdrop-filter:blur(5px);align-items:center;justify-content:center;}
+.auth-overlay.open{display:flex;}
+.auth-box{background:var(--white);border-radius:24px;padding:2.5rem;width:100%;max-width:400px;animation:fadeUp 0.28s ease;position:relative;}
+.auth-close-btn{position:absolute;top:1rem;right:1.2rem;background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text-light);line-height:1;}
+.auth-logo{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:600;color:var(--brown-soft);text-align:center;margin-bottom:0.3rem;}
+.auth-logo span{color:var(--sage);}
+.auth-subtitle{text-align:center;font-size:0.88rem;color:var(--text-muted);margin-bottom:1.5rem;}
+.auth-tabs{display:flex;border-radius:12px;overflow:hidden;border:1px solid var(--border);margin-bottom:1.4rem;}
+.auth-tab{flex:1;padding:0.65rem;text-align:center;font-size:0.88rem;cursor:pointer;background:var(--cream);color:var(--text-muted);transition:all 0.18s;font-family:'DM Sans',sans-serif;border:none;}
+.auth-tab.active{background:var(--sage);color:white;font-weight:500;}
+.auth-field{margin-bottom:0.9rem;}
+.auth-label{font-size:0.8rem;font-weight:500;color:var(--text-muted);margin-bottom:4px;display:block;}
+.auth-input{width:100%;border:1px solid var(--border-hover);border-radius:12px;padding:0.7rem 1rem;font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--text);background:var(--cream);outline:none;transition:border-color 0.2s;}
+.auth-input:focus{border-color:var(--sage);background:var(--white);}
+.auth-submit{width:100%;background:var(--sage);color:white;border:none;padding:0.9rem;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:500;cursor:pointer;margin-top:0.5rem;transition:background 0.2s;}
+.auth-submit:hover{background:#7a9e7a;}
+.auth-err{color:#c0392b;font-size:0.82rem;margin-top:4px;display:none;}
+
+/* BOOKING MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:250;background:rgba(45,40,32,0.5);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--white);border-radius:28px 28px 0 0;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;animation:slideUp 0.3s cubic-bezier(.22,1,.36,1);}
+@keyframes slideUp{from{transform:translateY(80px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal-handle-bar{display:flex;justify-content:center;padding:1rem 1rem 0;}
+.modal-handle{width:40px;height:4px;background:var(--border-hover);border-radius:2px;}
+.modal-inner{padding:1.25rem 1.75rem 2rem;}
+.modal-header{display:flex;gap:1rem;align-items:center;margin-bottom:1.25rem;}
+.modal-icon{font-size:2.8rem;}
+.modal-ht h2{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:600;color:var(--text);}
+.modal-ht p{font-size:0.83rem;color:var(--text-muted);margin-top:2px;}
+.fb-box{background:linear-gradient(135deg,#e8f0fe,#d2e3fc);border:1px solid #b8d0f8;border-radius:16px;padding:1.25rem;margin:1rem 0;text-align:center;}
+.fb-box-icon{font-size:2.4rem;margin-bottom:0.5rem;}
+.fb-box h3{font-size:0.95rem;font-weight:600;color:#1a237e;margin-bottom:0.4rem;}
+.fb-box p{font-size:0.82rem;color:#3949ab;line-height:1.55;}
+.fb-link{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#1877f2;color:white;border:none;padding:0.9rem;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:0.92rem;font-weight:500;cursor:pointer;margin-top:1rem;transition:background 0.2s;text-decoration:none;}
+.fb-link:hover{background:#1464d8;}
+.info-item{display:flex;gap:8px;align-items:flex-start;margin-bottom:7px;}
+.info-dot{width:6px;height:6px;border-radius:50%;background:var(--sage);margin-top:6px;flex-shrink:0;}
+.info-text{font-size:0.82rem;color:var(--text-muted);line-height:1.5;}
+.modal-close-btn{width:100%;background:var(--cream);color:var(--text-muted);border:1px solid var(--border-hover);padding:0.75rem;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:0.88rem;cursor:pointer;margin-top:0.75rem;transition:all 0.18s;}
+.modal-close-btn:hover{background:var(--sage-pale);}
+.login-prompt{background:var(--peach-pale);border:1px solid var(--peach-light);border-radius:14px;padding:1.1rem;text-align:center;margin:0.75rem 0;}
+.login-prompt p{font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;line-height:1.5;}
+.login-prompt-btn{background:var(--brown-soft);color:white;border:none;padding:0.6rem 1.3rem;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:0.85rem;cursor:pointer;font-weight:500;transition:opacity 0.2s;}
+.login-prompt-btn:hover{opacity:0.85;}
+
+footer{background:var(--white);border-top:1px solid var(--border);padding:2.5rem;text-align:center;color:var(--text-light);font-size:0.82rem;}
+footer strong{color:var(--text-muted);font-weight:500;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+.fade-in{animation:fadeUp 0.5s ease both;}
+
+#toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:var(--brown-soft);color:white;padding:0.75rem 1.5rem;border-radius:50px;font-size:0.88rem;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;}
+
+@media(max-width:768px){
+  nav{padding:1rem 1.25rem;}
+  .hero{grid-template-columns:1fr;padding:6rem 1.25rem 2rem;min-height:auto;gap:2rem;}
+  .hero-visual{display:none;}
+  .featured-section,.cats-section,.events-section{padding-left:1.25rem;padding-right:1.25rem;}
+  .featured-card{grid-template-columns:1fr;}
+  .featured-img{min-height:130px;}
+  .events-grid{grid-template-columns:1fr;}
+  .calendar-page{padding:5rem 1rem 3rem;}
+  .cal-day{min-height:64px;}
+  .cal-event-chip{display:none;}
+  .cal-day.has-ev::after{content:'•';color:var(--sage);font-size:1.1rem;display:block;text-align:center;line-height:1;}
+}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<nav>
+  <div class="logo" onclick="showPage('home')">vibe<span>.</span></div>
+  <div class="nav-links">
+    <a onclick="showPage('home')" id="nav-home" class="active">Események</a>
+    <a onclick="showPage('calendar')" id="nav-calendar">📅 Naptár</a>
+    <div id="nav-auth"></div>
+  </div>
+</nav>
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <section class="hero">
+    <div class="hero-text">
+      <div class="hero-tag">✦ Élmény. Közösség. Emlék.</div>
+      <h1 class="hero-h1">Találd meg a következő <em>kedvenc élményedet</em></h1>
+      <p class="hero-p">Ezer esemény egy helyen — zenei fesztiváloktól pici kávékóstolóig. Jelezd részvételed percek alatt!</p>
+      <div class="hero-search">
+        <input type="text" id="heroSearch" placeholder="Milyen élményt keresel?" />
+        <button onclick="doSearch()">Keresés →</button>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><span class="stat-num">1 240+</span><span class="stat-label">Aktív esemény</span></div>
+        <div class="stat"><span class="stat-num">48</span><span class="stat-label">Helyszín</span></div>
+        <div class="stat"><span class="stat-num">32K</span><span class="stat-label">Boldog résztvevő</span></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="deco-dot dot1"></div>
+      <div class="deco-dot dot2"></div>
+      <div class="deco-dot dot3"></div>
+      <div class="hero-card-stack">
+        <div class="hcard hcard-float1">
+          <div class="hcard-emoji">🎪</div><div class="hcard-tag">KIEMELT</div>
+          <div class="hcard-title-sm">Budapest Fesztivál</div>
+          <div class="hcard-date-sm">Jún. 14–16 · Városliget</div>
+        </div>
+        <div class="hcard hcard-float2">
+          <div style="font-size:1.4rem;margin-bottom:4px;">🍷</div><div class="hcard-tag">GASZTRO</div>
+          <div class="hcard-title-sm" style="font-size:0.85rem;">Borfesztivál</div>
+          <div class="hcard-date-sm">Máj. 17–19</div>
+        </div>
+        <div class="hcard hcard-main">
+          <div class="hcard-img-area">🎵</div>
+          <div>
+            <div class="hcard-info"><h3>Jazz Éjszaka</h3><p>📍 Akvárium Klub · Máj. 3</p></div>
+            <div class="hcard-footer" style="margin-top:10px;">
+              <span class="hcard-price">2 900 Ft</span>
+              <button class="hcard-btn-sm" onclick="openBooking(0)">Foglalás →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="featured-section">
+    <div class="section-label">Kiemelt esemény</div>
+    <div class="featured-card">
+      <div class="featured-img">🎪</div>
+      <div class="featured-body">
+        <div>
+          <div class="feat-tag">Fesztivál · 3 nap</div>
+          <div class="feat-title">Budapest Fesztivál 2025</div>
+          <div class="feat-meta">📅 Június 14–16, 2025<br>📍 Városliget, Budapest<br>🎤 12 fellépő · 3 helyszín · 20 000 látogató</div>
+        </div>
+        <div class="feat-actions">
+          <button class="feat-btn-primary" onclick="openBooking(12)">Jegyet foglalok</button>
+          <button class="feat-btn-ghost">Részletek</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cats-section">
+    <div class="section-label">Kategóriák</div>
+    <div class="cats-grid">
+      <div class="cat-pill active" onclick="filterCat(this,'')">✨ Minden</div>
+      <div class="cat-pill" onclick="filterCat(this,'Zene')">🎵 Zene</div>
+      <div class="cat-pill" onclick="filterCat(this,'Sport')">🏃 Sport</div>
+      <div class="cat-pill" onclick="filterCat(this,'Gasztro')">🍷 Gasztronómia</div>
+      <div class="cat-pill" onclick="filterCat(this,'Kultúra')">🎭 Kultúra</div>
+      <div class="cat-pill" onclick="filterCat(this,'Tech')">💻 Tech</div>
+      <div class="cat-pill" onclick="filterCat(this,'Természet')">🌿 Természet</div>
+    </div>
+  </div>
+
+  <div class="events-section">
+    <div class="events-header">
+      <div>
+        <div class="events-title" id="eventsTitle">Közelgő események</div>
+        <div class="events-count" id="eventsCount"></div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="view-btn active">☰ Lista</button>
+        <button class="view-btn" onclick="showPage('calendar')">📅 Naptár</button>
+      </div>
+    </div>
+    <div class="events-grid" id="eventsGrid"></div>
+  </div>
+
+  <footer><strong>vibe.</strong> — Minden jog fenntartva © 2025 · Készítette szeretettel 🌿</footer>
+</div>
+
+<!-- CALENDAR -->
+<div class="page" id="page-calendar">
+  <div class="calendar-page">
+    <div class="cal-header">
+      <div class="cal-title">📅 Eseménynaptár</div>
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="calMove(-1)">‹</button>
+        <span class="cal-month-label" id="calLabel"></span>
+        <button class="cal-nav-btn" onclick="calMove(1)">›</button>
+      </div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-legend" id="calLegend"></div>
+  </div>
+  <footer><strong>vibe.</strong> — Minden jog fenntartva © 2025 🌿</footer>
+</div>
+
+<!-- BOOKING MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-handle-bar"><div class="modal-handle"></div></div>
+    <div class="modal-inner" id="modalInner"></div>
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="auth-overlay" id="authOverlay" onclick="if(event.target===this)closeAuth()">
+  <div class="auth-box">
+    <button class="auth-close-btn" onclick="closeAuth()">×</button>
+    <div class="auth-logo">vibe<span>.</span></div>
+    <div class="auth-subtitle" id="authSub">Üdvözöl a vibe közösség!</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Bejelentkezés</button>
+      <button class="auth-tab" id="tab-reg" onclick="switchTab('register')">Regisztráció</button>
+    </div>
+    <div id="authForm"></div>
+  </div>
+</div>
+
+<script>
+// DATA
+const events = [
+  {id:0,icon:'🎵',title:'Jazz Éjszaka',date:'2025-05-03',place:'Akvárium Klub, Budapest',badge:'Zene',cls:'badge-zene',cat:'Zene',theme:'theme-sage',chip:'',price:2900,fb:'https://www.facebook.com/events/jazz-ejszaka-2025'},
+  {id:1,icon:'🏃',title:'Budai Félmaraton',date:'2025-05-11',place:'Margit-híd start',badge:'Sport',cls:'badge-sport',cat:'Sport',theme:'theme-sky',chip:'chip-sky',price:1500,fb:'https://www.facebook.com/events/budai-felmaraton-2025'},
+  {id:2,icon:'🍷',title:'Budai Borfesztivál',date:'2025-05-17',place:'Budai Vár, Budapest',badge:'Gasztro',cls:'badge-gasztro',cat:'Gasztro',theme:'theme-peach',chip:'chip-peach',price:3200,fb:'https://www.facebook.com/events/budai-borfesztival-2025'},
+  {id:3,icon:'🎭',title:'Kortárs Tánc Gála',date:'2025-05-22',place:'Trafó, Budapest',badge:'Kultúra',cls:'badge-kultura',cat:'Kultúra',theme:'theme-lavender',chip:'chip-lavender',price:2200,fb:'https://www.facebook.com/events/kortars-tanc-gala-2025'},
+  {id:4,icon:'💻',title:'Budapest AI Summit',date:'2025-05-28',place:'Syma Csarnok',badge:'Tech',cls:'badge-tech',cat:'Tech',theme:'theme-butter',chip:'chip-butter',price:8900,fb:'https://www.facebook.com/events/bp-ai-summit-2025'},
+  {id:5,icon:'🌿',title:'Ökotúra a Pilisben',date:'2025-06-01',place:'Pilisszentkereszt',badge:'Természet',cls:'badge-termeszet',cat:'Természet',theme:'theme-sage',chip:'',price:0,fb:'https://www.facebook.com/events/okotora-pilis-2025'},
+  {id:6,icon:'🎸',title:'Rock a Parkban',date:'2025-06-07',place:'Feneketlen-tó, Bp.',badge:'Zene',cls:'badge-zene',cat:'Zene',theme:'theme-peach',chip:'chip-peach',price:1900,fb:'https://www.facebook.com/events/rock-a-parkban-2025'},
+  {id:7,icon:'🍕',title:'Street Food Fesztivál',date:'2025-06-08',place:'Kopaszi-gát, Budapest',badge:'Gasztro',cls:'badge-gasztro',cat:'Gasztro',theme:'theme-butter',chip:'chip-butter',price:0,fb:'https://www.facebook.com/events/street-food-fesztival-2025'},
+  {id:8,icon:'🎨',title:'Modern Képzőművészet',date:'2025-06-12',place:'Ludwig Múzeum, Bp.',badge:'Kultúra',cls:'badge-kultura',cat:'Kultúra',theme:'theme-lavender',chip:'chip-lavender',price:1800,fb:'https://www.facebook.com/events/modern-kepzomuveszet-2025'},
+  {id:9,icon:'🏊',title:'Balatoni Triatlón',date:'2025-06-21',place:'Siófok, Balaton',badge:'Sport',cls:'badge-sport',cat:'Sport',theme:'theme-sky',chip:'chip-sky',price:4500,fb:'https://www.facebook.com/events/balatoni-triatlon-2025'},
+  {id:10,icon:'🎻',title:'Klasszikus Szimfónia',date:'2025-06-25',place:'Zeneakadémia, Bp.',badge:'Kultúra',cls:'badge-kultura',cat:'Kultúra',theme:'theme-lavender',chip:'chip-lavender',price:3900,fb:'https://www.facebook.com/events/klasszikus-szimfonia-2025'},
+  {id:11,icon:'🌳',title:'Városi Kertészkedés',date:'2025-07-05',place:'Botanikus Kert, Bp.',badge:'Természet',cls:'badge-termeszet',cat:'Természet',theme:'theme-sage',chip:'',price:800,fb:'https://www.facebook.com/events/varosi-kerteszkedes-2025'},
+  {id:12,icon:'🎪',title:'Budapest Fesztivál 2025',date:'2025-06-14',place:'Városliget, Budapest',badge:'Zene',cls:'badge-zene',cat:'Zene',theme:'theme-sage',chip:'',price:8900,fb:'https://www.facebook.com/events/budapest-fesztival-2025'},
+];
+
+function fmtDate(d){ const dt=new Date(d); return dt.toLocaleDateString('hu-HU',{month:'long',day:'numeric'}); }
+
+// TOAST
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.style.opacity='1'; clearTimeout(t._t); t._t=setTimeout(()=>{t.style.opacity='0';},3200); }
+
+// AUTH
+let me = JSON.parse(localStorage.getItem('vibe_me')||'null');
+
+function renderNav(){
+  const el=document.getElementById('nav-auth');
+  if(me){
+    const ini=me.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+    el.innerHTML=`<div class="nav-user"><div class="nav-avatar">${ini}</div><span style="font-size:0.85rem;color:var(--text-muted)">${me.name.split(' ')[0]}</span><a style="font-size:0.75rem;color:var(--text-light)" onclick="doLogout()">Kilépés</a></div>`;
+  } else {
+    el.innerHTML=`<a class="nav-cta" onclick="openAuth()">Regisztráció</a>`;
+  }
+}
+
+function openAuth(){ document.getElementById('authOverlay').classList.add('open'); switchTab('login'); }
+function closeAuth(){ document.getElementById('authOverlay').classList.remove('open'); }
+
+function switchTab(tab){
+  document.getElementById('tab-login').classList.toggle('active',tab==='login');
+  document.getElementById('tab-reg').classList.toggle('active',tab==='register');
+  const f=document.getElementById('authForm');
+  if(tab==='login'){
+    document.getElementById('authSub').textContent='Jelentkezz be a fiókodba';
+    f.innerHTML=`
+      <div class="auth-field"><label class="auth-label">E-mail</label><input class="auth-input" id="li-e" type="email" placeholder="anna@example.hu"/></div>
+      <div class="auth-field"><label class="auth-label">Jelszó</label><input class="auth-input" id="li-p" type="password" placeholder="••••••••"/></div>
+      <div class="auth-err" id="li-err">Hibás e-mail vagy jelszó.</div>
+      <button class="auth-submit" onclick="doLogin()">Bejelentkezés</button>
+      <p style="text-align:center;font-size:0.8rem;color:var(--text-light);margin-top:1rem">Még nincs fiókod? <span style="color:var(--sage);cursor:pointer" onclick="switchTab('register')">Regisztrálj!</span></p>`;
+  } else {
+    document.getElementById('authSub').textContent='Csatlakozz a vibe közösséghez!';
+    f.innerHTML=`
+      <div class="auth-field"><label class="auth-label">Teljes neved</label><input class="auth-input" id="rg-n" type="text" placeholder="Kovács Anna"/></div>
+      <div class="auth-field"><label class="auth-label">E-mail</label><input class="auth-input" id="rg-e" type="email" placeholder="anna@example.hu"/></div>
+      <div class="auth-field"><label class="auth-label">Jelszó (min. 6 karakter)</label><input class="auth-input" id="rg-p" type="password" placeholder="••••••••"/></div>
+      <div class="auth-err" id="rg-err"></div>
+      <button class="auth-submit" onclick="doRegister()">Regisztráció</button>
+      <p style="text-align:center;font-size:0.8rem;color:var(--text-light);margin-top:1rem">Van már fiókod? <span style="color:var(--sage);cursor:pointer" onclick="switchTab('login')">Lépj be!</span></p>`;
+  }
+}
+
+function doLogin(){
+  const e=document.getElementById('li-e').value.trim();
+  const p=document.getElementById('li-p').value;
+  const users=JSON.parse(localStorage.getItem('vibe_users')||'[]');
+  const u=users.find(x=>x.email===e&&x.pass===p);
+  if(!u){ document.getElementById('li-err').style.display='block'; return; }
+  me=u; localStorage.setItem('vibe_me',JSON.stringify(u));
+  closeAuth(); renderNav(); toast('Üdvözlünk vissza, '+u.name.split(' ')[0]+'! 👋');
+}
+
+function doRegister(){
+  const n=document.getElementById('rg-n').value.trim();
+  const e=document.getElementById('rg-e').value.trim();
+  const p=document.getElementById('rg-p').value;
+  const err=document.getElementById('rg-err');
+  err.style.display='none';
+  if(!n){ err.textContent='Add meg a neved!'; err.style.display='block'; return; }
+  if(!e||!e.includes('@')){ err.textContent='Érvényes e-mail kell!'; err.style.display='block'; return; }
+  if(p.length<6){ err.textContent='A jelszó legalább 6 karakter!'; err.style.display='block'; return; }
+  const users=JSON.parse(localStorage.getItem('vibe_users')||'[]');
+  if(users.find(x=>x.email===e)){ err.textContent='Ez az e-mail már regisztrált!'; err.style.display='block'; return; }
+  const u={name:n,email:e,pass:p};
+  users.push(u); localStorage.setItem('vibe_users',JSON.stringify(users));
+  me=u; localStorage.setItem('vibe_me',JSON.stringify(u));
+  closeAuth(); renderNav(); toast('Sikeres regisztráció, '+n.split(' ')[0]+'! 🎉 Örülünk, hogy itt vagy!');
+}
+
+function doLogout(){ me=null; localStorage.removeItem('vibe_me'); renderNav(); toast('Sikeresen kijelentkeztél. Viszlát! 👋'); }
+
+// BOOKING MODAL
+function openBooking(idx){
+  const ev=events[idx];
+  const inner=document.getElementById('modalInner');
+  inner.innerHTML=`
+    <div class="modal-header">
+      <div class="modal-icon">${ev.icon}</div>
+      <div class="modal-ht">
+        <h2>${ev.title}</h2>
+        <p>${fmtDate(ev.date)} · ${ev.place}</p>
+      </div>
+    </div>
+    ${!me?`
+    <div class="login-prompt">
+      <p>A foglaláshoz előbb lépj be vagy regisztrálj — gyors és ingyenes!</p>
+      <button class="login-prompt-btn" onclick="closeModal();openAuth()">Bejelentkezés / Regisztráció</button>
+    </div>`:''}
+    <div class="fb-box">
+      <div class="fb-box-icon">👥</div>
+      <h3>Foglalás közvetlenül a szervezőnél</h3>
+      <p>Az esemény Facebook oldalán megtalálod a szervező elérhetőségét, a pontos jegyárat és az összes részletet.</p>
+    </div>
+    <div style="margin:0.75rem 0 1rem;">
+      <div class="info-item"><div class="info-dot"></div><div class="info-text">Kattints az „Érdekel" vagy „Megyek" gombra a Facebook eseményen</div></div>
+      <div class="info-item"><div class="info-dot"></div><div class="info-text">Írj üzenetet a szervezőnek a jegyekről és a fizetésről</div></div>
+      <div class="info-item"><div class="info-dot"></div><div class="info-text">A szervező közvetlenül válaszol és intézi a foglalást</div></div>
+    </div>
+    <a class="fb-link" href="${ev.fb}" target="_blank" rel="noopener">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+      Megnyitom a Facebook eseményt
+    </a>
+    <button class="modal-close-btn" onclick="closeModal()">Bezárás</button>
+  `;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); document.body.style.overflow=''; }
+
+// EVENTS LIST
+let activeFilter='', activeSearch='';
+function renderEvents(){
+  const grid=document.getElementById('eventsGrid');
+  const q=activeSearch.toLowerCase();
+  const fil=events.filter(e=>(!activeFilter||e.cat===activeFilter)&&(!q||e.title.toLowerCase().includes(q)||e.place.toLowerCase().includes(q)||e.cat.toLowerCase().includes(q)));
+  document.getElementById('eventsCount').textContent=fil.length+' esemény';
+  if(!fil.length){ grid.innerHTML='<div class="no-results">😔 Nem találtunk ilyen eseményt.</div>'; return; }
+  grid.innerHTML=fil.map((e,i)=>`
+    <div class="event-card fade-in" style="animation-delay:${i*0.05}s">
+      <div class="ec-img ${e.theme}"><span class="ec-badge ${e.cls}">${e.badge}</span>${e.icon}</div>
+      <div class="ec-body">
+        <div class="ec-title">${e.title}</div>
+        <div class="ec-meta"><span>📅 ${fmtDate(e.date)}</span><span>📍 ${e.place}</span></div>
+        <div class="ec-footer">
+          <div class="ec-price">${e.price?e.price.toLocaleString('hu-HU')+' Ft':'Ingyenes'}${e.price?'<small>/ fő</small>':''}</div>
+          <button class="ec-btn" onclick="openBooking(${e.id})">Foglalás →</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function filterCat(el,cat){
+  document.querySelectorAll('.cat-pill').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active'); activeFilter=cat;
+  document.getElementById('eventsTitle').textContent=cat?cat+' események':'Közelgő események';
+  renderEvents();
+}
+
+function doSearch(){
+  activeSearch=document.getElementById('heroSearch').value;
+  activeFilter='';
+  document.querySelectorAll('.cat-pill').forEach(c=>c.classList.remove('active'));
+  document.querySelector('.cat-pill').classList.add('active');
+  document.getElementById('eventsTitle').textContent=activeSearch?'"'+activeSearch+'" eredmények':'Közelgő események';
+  document.querySelector('.events-section').scrollIntoView({behavior:'smooth',block:'start'});
+  renderEvents();
+}
+document.getElementById('heroSearch').addEventListener('keydown',e=>{ if(e.key==='Enter') doSearch(); });
+
+// PAGE NAV
+function showPage(p){
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  ['home','calendar'].forEach(id=>{ const el=document.getElementById('nav-'+id); if(el) el.classList.toggle('active',id===p); });
+  window.scrollTo(0,0);
+  if(p==='calendar') renderCalendar();
+}
+
+// CALENDAR
+const HU_M=['Január','Február','Március','Április','Május','Június','Július','Augusztus','Szeptember','Október','November','December'];
+const HU_D=['Hétfő','Kedd','Szerda','Csütörtök','Péntek','Szombat','Vasárnap'];
+const HU_DS=['Hé','Ke','Sze','Csü','Pé','Szo','Va'];
+let calY=2025, calM=4;
+
+function calMove(d){ calM+=d; if(calM>11){calM=0;calY++;} if(calM<0){calM=11;calY--;} renderCalendar(); }
+
+function renderCalendar(){
+  document.getElementById('calLabel').textContent=HU_M[calM]+' '+calY;
+  const todayStr=new Date().toISOString().slice(0,10);
+  const evMap={};
+  events.forEach(e=>{ if(!evMap[e.date]) evMap[e.date]=[]; evMap[e.date].push(e); });
+
+  const firstDow=(new Date(calY,calM,1).getDay()+6)%7;
+  const daysInM=new Date(calY,calM+1,0).getDate();
+  const daysInPrev=new Date(calY,calM,0).getDate();
+  const total=Math.ceil((firstDow+daysInM)/7)*7;
+
+  let html=HU_DS.map(d=>`<div class="cal-day-name">${d}</div>`).join('');
+
+  for(let i=0;i<total;i++){
+    let dn, ds, isCur=true;
+    if(i<firstDow){ dn=daysInPrev-firstDow+1+i; const pm=calM===0?12:calM; const py=calM===0?calY-1:calY; ds=`${py}-${String(pm).padStart(2,'0')}-${String(dn).padStart(2,'0')}`; isCur=false; }
+    else if(i-firstDow>=daysInM){ dn=i-firstDow-daysInM+1; const nm=calM===11?1:calM+2; const ny=calM===11?calY+1:calY; ds=`${ny}-${String(nm).padStart(2,'0')}-${String(dn).padStart(2,'0')}`; isCur=false; }
+    else{ dn=i-firstDow+1; ds=`${calY}-${String(calM+1).padStart(2,'0')}-${String(dn).padStart(2,'0')}`; }
+
+    const evs=evMap[ds]||[];
+    let cls='cal-day'+(isCur?'':' other-month')+(ds===todayStr?' today':'')+(evs.length?' has-ev':'');
+    const numHtml=`<div class="cal-day-num">${dn}</div>`;
+    const chips=evs.slice(0,2).map(ev=>`<span class="cal-event-chip ${ev.chip}" onclick="event.stopPropagation();openBooking(${ev.id})">${ev.icon} ${ev.title}</span>`).join('');
+    const more=evs.length>2?`<span class="cal-more">+${evs.length-2} további</span>`:'';
+    html+=`<div class="${cls}">${numHtml}${chips}${more}</div>`;
+  }
+  document.getElementById('calGrid').innerHTML=html;
+
+  const cats=[...new Set(events.map(e=>e.cat))];
+  const dotMap={Zene:'var(--sage-light)',Sport:'var(--sky)',Gasztro:'var(--peach)',Kultúra:'var(--lavender)',Tech:'var(--butter)',Természet:'var(--sage-light)'};
+  document.getElementById('calLegend').innerHTML=
+    `<div class="cal-leg"><div class="cal-leg-dot" style="background:var(--sage);border-radius:50%"></div>Mai nap</div>`+
+    cats.map(c=>`<div class="cal-leg"><div class="cal-leg-dot" style="background:${dotMap[c]||'var(--sage-light)'}"></div>${c}</div>`).join('');
+}
+
+// INIT
+renderNav();
+renderEvents();
+</script>
+</body>
+</html>
